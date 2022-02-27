@@ -31,7 +31,7 @@ const {body, validationResult} = require("express-validator")
   })
 
 //appointmet getting info route
-  router.get("/appointment", async(req,res,next)=>{
+  router.get("/appointment",checkAuth.suerAdmin, async(req,res,next)=>{
 
          try {
            var {page, size} = req.query
@@ -57,12 +57,61 @@ const {body, validationResult} = require("express-validator")
                
             });
            });
-            // const appointment = await Appointment.find().skip((page-1)*size).limit(limit)
-            // // console.log(appointment)
-            // res.status(200).json( appointment)
          } catch (error) {
           res.status(400).json(error)
          }
   })
+
+//appointmet getting Single info route
+  router.get("/appointment/:id", checkAuth.superAndNormal, async(req,res,next)=>{
+    try {
+      var {page, size} = req.query
+
+      if(!page){
+        page = 1
+      }
+      if(!size){
+        size=5
+      }
+     //  console.log(page, size)
+     //  const limit = parseInt(size)
+      Appointment.count({},function(err,count){
+       Appointment.find({user_id:req.params.id}, null, {}).skip(page > 0 ? ((page - 1) * size) : 0).limit(size).exec(function(err, docs) {
+         if (err)
+           res.json(err);
+         else{
+           var totalCount = Math.ceil(count/size)
+           res.json({
+             "data": docs, "meta":{"total": count, "pageCount": totalCount,page, size, }
+           });
+         }
+          
+       });
+      });
+    } catch (error) {
+     res.status(400).json(error)
+    }
+  })
+//appointment delete
+ router.delete("/appointment/:id",checkAuth.superAndNormal,async (req,res,next)=>{
+     try {
+        const _idFind = await Appointment.findOne({_id:req.params.id})
+        if(_idFind){
+          await Appointment.findOneAndDelete({_id:req.params.id})
+          res.status(200).json({
+            msg:"User Deleted Successfully!"
+          })
+        }else{
+          res.status(400).json({
+            msg:"User id not found"
+          })
+        }
+     } catch (error) {
+      res.status(400).json({
+        msg:"User id not found"
+      })
+     }
+ })
+
 //export to the appointment route
   module.exports = router

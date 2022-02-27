@@ -17,7 +17,7 @@ const port = process.env.PORT
 // creating cors policy
 app.use(cors())
  //using to router as middleware
-  app.use("/api/user", userRoute)
+  app.use("/api", userRoute)
   app.use("/api", appointmentRoute)
   app.use("",(req,res, next)=>{
       res.status(400).json({

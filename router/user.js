@@ -6,10 +6,11 @@ const {body, validationResult} = require("express-validator")
 const jwt = require("jsonwebtoken")
 
  //creating user router
- router.post("/create",
+ router.post("/user/create",
                body("fname", "Please enter your first name").notEmpty(),
                body("lname", "Please enter your last name").notEmpty(),
                body("email").notEmpty().withMessage("Please enter you email").isEmail().withMessage("Invalid email"),
+               body("mobile").notEmpty().withMessage("Please enter mobile number!").isLength({min:10, max:10}).withMessage("Invalid mobile number!"),
                body("password").isLength({min:5}).withMessage('Password must be at least 5 chars long').matches(/\d/).withMessage('Password must contain a number'),
                async (req, res, next)=>{
                    try {
@@ -49,7 +50,7 @@ const jwt = require("jsonwebtoken")
  )
 
 //login router
-    router.post("/login", async (req,res, next)=>{
+    router.post("/user/login", async (req,res, next)=>{
                 try {
                     const {email, password} = req.body
                     // console.log(req.body)
@@ -82,6 +83,37 @@ const jwt = require("jsonwebtoken")
                 }
     
     })
+
+//user info getting
+   router.get("/users", async (req,res,next)=>{
+          try {
+            var {page, size} = req.query
+ 
+            if(!page){
+              page = 1
+            }
+            if(!size){
+              size=5
+            }
+           //  console.log(page, size)
+           //  const limit = parseInt(size)
+            userCreate.count({},function(err,count){
+             userCreate.find({}, null, {}).skip(page > 0 ? ((page - 1) * size) : 0).limit(size).exec(function(err, docs) {
+               if (err)
+                 res.json(err);
+               else{
+                 var totalCount = Math.ceil(count/size)
+                 res.json({
+                   "data": docs, "meta":{"total": count, "pageCount": totalCount,page, size, }
+                 });
+               }
+                
+             });
+            });
+          } catch (error) {
+              res.status(400).json(error)
+          }
+   })
 //exporting to the router
 
 module.exports = router
