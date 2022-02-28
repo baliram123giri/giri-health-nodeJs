@@ -4,11 +4,9 @@ const { default: mongoose } = require("mongoose")
 const otpSchema = new mongoose.Schema({
     email:String,
     otp:String,
-    expireIn:Number
+    expireIn:Number,
+    createdAt: { type: Date, expires: '3m', default: Date.now }
    },
-   {
-       timestamps:true
-   }
 
 )
 
