@@ -1,10 +1,11 @@
 const express = require ("express")
 const router = express.Router()
 const userCreate = require("../modal/user")
+const OtpCreate = require("../modal/reset-password")
 const  bcrypt = require ("bcrypt")
 const {body, validationResult} = require("express-validator")
 const jwt = require("jsonwebtoken")
-
+const nodemailer = require("nodemailer");
  //creating user router
  router.post("/user/create",
                body("fname", "Please enter your first name").notEmpty(),
@@ -114,6 +115,93 @@ const jwt = require("jsonwebtoken")
               res.status(400).json(error)
           }
    })
-//exporting to the router
+
+ //email password otp send
+   router.post("/users/email-send", async(req,res,next)=>{
+       const email = await userCreate.findOne({email:req.body.email})
+       if(email){
+         let randOtp= Math.floor(Math.random() * 899999 + 100000) 
+         let otpData = new OtpCreate({...req.body,otp:randOtp, expireIn:(new Date().getTime()) + (300*1000)})
+         await otpData.save()
+         emailSendHandler(otpData.email, randOtp)
+         res.status(200).json({
+           msg:"Please check your email id"
+         })
+       }else{
+         res.status(400).json({
+           msg:"Email isn't exist!"
+         })
+       }
+   })
+ //email otp password change
+   router.put("/users/fogot-pass", async(req,res,next)=>{
+         try {
+           const result = await OtpCreate.findOne({otp:req.body.otp, email:req.body.email})
+           if(result){
+              let dif = (result.expireIn)-(new Date().getTime())
+              if(dif<0){
+                res.status(400).json({msg:"otp has been expire!"})
+              }else{
+                //user password changing
+                   //user creating
+                   bcrypt.hash(req.body.password, 10, async (err, hash)=>{
+                    if(err){
+                        res.status(400).json({
+                            msg:"Internal Server Error"
+                        })
+                    }else{
+                      await userCreate.updateOne({email:req.body.email}, {password:hash})
+                          res.status(200).json({
+                            msg:"Password Changed Successfully!",  
+                          })
+                      
+                    }
+                 })
+
+              }
+            // const result = await userCreate.updateOne({password:})
+           }else{
+            res.status(400).json({
+              msg:"Invalid Otp"
+            })
+           }
+         } catch (error) {
+           res.status(400).json(error)
+         }
+   })
+//eamil send function
+const emailSendHandler =(email, otp)=>{
+  const transport = nodemailer.createTransport({
+    service: "gmail",
+    secure:true,
+      auth: {
+        user: 'giriheakthcares@gmail.com',
+        pass: "Baliram@321", 
+      },
+      tls:{
+        rejectUnauthorized: false
+      }
+  })
+
+  const mailOption = {
+    from: '"giri-healths" <giri71401@gmail.com>', // sender address
+    to: `${email}`, // list of receivers
+    subject: "Password Change ", // Subject line
+    html: `<p>Dear <>,</p> </br> </br>
+           <p>Kindly use OTP: ${otp} to update your password on Giri-healths Portal.Regards,</p> </br> </br>
+           <p>Note:Password is confidential, do not share with any one for security reason
+           Plesae update your mobile number in system if it is changed</p>
+           `, // html body
+  }
+
+  transport.sendMail(mailOption, function(err, data){
+    if(err){
+      res.status(400).json(err)
+    }else{
+      res.status(200).json({"msg":"email has been sent successfully!"})
+    }
+  })
+}
+   
 
 module.exports = router
