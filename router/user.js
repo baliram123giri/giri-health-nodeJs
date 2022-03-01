@@ -2,6 +2,7 @@ const express = require ("express")
 const router = express.Router()
 const userCreate = require("../modal/user")
 const OtpCreate = require("../modal/reset-password")
+const {doctor} = require("../modal/doctor")
 const  bcrypt = require ("bcrypt")
 const {body, validationResult} = require("express-validator")
 const jwt = require("jsonwebtoken")
@@ -204,4 +205,43 @@ const emailSendHandler =(email, otp)=>{
 }
    
 
+//docto create router
+router.post("/user/doctor",
+    body("fname").notEmpty().withMessage("Please enter your first name! "), 
+    body("lname").notEmpty().withMessage("Please enter your last name!"), 
+    body("username").notEmpty().withMessage("Please enter your username!").isLength({min:6}).withMessage("Username must be at least 5 chars long!"), 
+    body("password").notEmpty().withMessage("Please enter your password!").isLength({min:6}).withMessage("Password must be at least 5 chars long!"), 
+    body("email").notEmpty().isEmail().withMessage("Please enter valid email!"), 
+    body("mobile").notEmpty().withMessage("Please enter mobile number!").isLength({min:10, max:10}).withMessage("Invalid mobile number!"),
+    body("specialistIn").notEmpty().withMessage("Please enter your specialisties!"),
+    body("gender").notEmpty().withMessage("Please select your gender!"),
+    body("country").notEmpty().withMessage("Please select your country!"),
+    body("state").notEmpty().withMessage("Please select your state!")
+    , async(req,res,next)=>{
+        try {
+          const errors = validationResult(req);
+          if (!errors.isEmpty()) {
+                       res.status(400).json({msg:errors.array()[0].msg})
+                 }else{
+                      //let's check if user already in database or not
+                      const emailCheck = await doctor.findOne({email:req.body.email})
+                      if(!emailCheck){
+                          //let's bcrypt to the password
+                          bcrypt.hash(req.body.password, 10, async (err, hash)=>{
+                            //let's check if error!
+                            if(!err){
+                              const doctorData = new doctor({...req.body, password:hash})
+                               await doctorData.save()
+                              res.status(200).json({msg:"User created successfully..."})
+                            }
+                          })
+                      }else{
+                        res.status(400).json({msg:"Email is already in use!"})
+                      }
+                 }
+         
+        } catch (error) {
+          res.status(400).json(error)
+        }
+})
 module.exports = router
