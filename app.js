@@ -10,7 +10,7 @@ const port = process.env.PORT
 //importing routers here
     const userRoute = require("./router/user")
     const appointmentRoute = require("./router/appointment")
-
+    const doctorsRoutes = require("./router/doctor")
  //creating middleware here
  app.use(express.json())
 
@@ -19,6 +19,7 @@ app.use(cors())
  //using to router as middleware
   app.use("/api", userRoute)
   app.use("/api", appointmentRoute)
+  app.use("/api/", doctorsRoutes)
   app.use("",(req,res, next)=>{
       res.status(400).json({
           msg:"Url Not Found!"

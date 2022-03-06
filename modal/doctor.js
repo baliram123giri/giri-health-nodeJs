@@ -8,7 +8,7 @@ const { default: mongoose } = require("mongoose");
      password:String,
      email:String,
      mobile: Number,
-     specialistIn:String,
+     specialist:String,
      gender:String,
      country:String,
      state:String,

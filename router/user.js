@@ -191,7 +191,8 @@ const emailSendHandler =(email, otp)=>{
     html: `<p>Dear <>,</p> </br> </br>
            <p>Kindly use OTP: ${otp} to update your password on Giri-healths Portal.Regards,</p> </br> </br>
            <p>Note:Password is confidential, do not share with any one for security reason
-           Plesae update your mobile number in system if it is changed</p>
+           Plesae update your mobile number in system if it is changed</p> </br> </br>
+           <a href="http://localhost:3000/admin" target="_blank"> Click here </a>
            `, // html body
   }
 
@@ -213,7 +214,7 @@ router.post("/user/doctor",
     body("password").notEmpty().withMessage("Please enter your password!").isLength({min:6}).withMessage("Password must be at least 5 chars long!"), 
     body("email").notEmpty().isEmail().withMessage("Please enter valid email!"), 
     body("mobile").notEmpty().withMessage("Please enter mobile number!").isLength({min:10, max:10}).withMessage("Invalid mobile number!"),
-    body("specialistIn").notEmpty().withMessage("Please enter your specialisties!"),
+    body("specialist").notEmpty().withMessage("Please enter your specialisties!"),
     body("gender").notEmpty().withMessage("Please select your gender!"),
     body("country").notEmpty().withMessage("Please select your country!"),
     body("state").notEmpty().withMessage("Please select your state!")
@@ -232,7 +233,7 @@ router.post("/user/doctor",
                             if(!err){
                               const doctorData = new doctor({...req.body, password:hash})
                                await doctorData.save()
-                              res.status(200).json({msg:"User created successfully..."})
+                              res.status(200).json({msg:"User Registered successfully..."})
                             }
                           })
                       }else{
@@ -243,5 +244,32 @@ router.post("/user/doctor",
         } catch (error) {
           res.status(400).json(error)
         }
+})
+
+//doctor Login router
+router.post("/user/doctor-login", async(req,res)=>{
+  try {
+     const user = await doctor.findOne({email:req.body.email})
+      //checkig eamil if user is exist or not
+      if(user){
+        //fetching data and compare
+        const validatePass  = await bcrypt.compare(req.body.password, user.password)
+        if((validatePass) && (req.body.email===user.email)){
+           //undefined to the user password we don't want to serve password to the user
+            user.password=undefined
+            //let's create jwt token
+           const token = jwt.sign({user},process.env.API_USER_AUTH_KEY, {expiresIn:"24hr"})
+            res.status(200).json({user, token})
+        }else{
+          res.status(400).json({msg:"User Email or password is wrong!"})
+        }
+
+        
+      }else{
+        res.status(400).json({msg:"User Email or password is wrong!"})
+      }
+  } catch (error) {
+    
+  }
 })
 module.exports = router

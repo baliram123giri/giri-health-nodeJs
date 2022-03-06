@@ -62,8 +62,8 @@ const {body, validationResult} = require("express-validator")
          }
   })
 
-//appointmet getting Single info route
-  router.get("/appointment/:id", checkAuth.superAndNormal, async(req,res,next)=>{
+//appointmet getting Single info with id route
+  router.get("/appointment/:id", checkAuth.allUser, async(req,res,next)=>{
     try {
       var {page, size} = req.query
       if(!page){
@@ -81,14 +81,39 @@ const {body, validationResult} = require("express-validator")
      res.status(400).json(error)
     }
   })
+
+//appointmet getting Single info with doctorname route
+  router.get("/appointment/find/:doctorname", checkAuth.doctorAuth, async(req,res,next)=>{
+    console.log(req.params.doctorname)
+    try {
+      var {page, size} = req.query
+      if(!page){
+        page = 1
+      }
+      if(!size){
+        size=5
+      }
+    
+    const result = await Appointment.find({doctor_name:req.params.doctorname}).skip((page-1)*size).limit(size)
+    const pagecount = await Appointment.find({doctor_name:req.params.doctorname})
+  
+      res.status(200).json({
+        "data": result, "meta":{"total": pagecount.length, "pageCount": Math.ceil(pagecount.length/size)  ,page, size, }
+      })
+   
+    } catch (error) {
+     res.status(400).json({msg:"Doctor not Found!", error})
+    }
+  })
+
 //appointment delete
- router.delete("/appointment/:id",checkAuth.superAndNormal,async (req,res,next)=>{
+ router.delete("/appointment/:id",checkAuth.allUser,async (req,res,next)=>{
      try {
         const _idFind = await Appointment.findOne({_id:req.params.id})
         if(_idFind){
           await Appointment.findOneAndDelete({_id:req.params.id})
           res.status(200).json({
-            msg:"Appointment Deleted Successfully!"
+            msg:"Appointment Deleted Successfully!" 
           })
         }else{
           res.status(400).json({

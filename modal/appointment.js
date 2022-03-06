@@ -19,6 +19,7 @@ const mongoose = require("mongoose")
        time:{
            type:String
        },
+       doctor_name:{type:String},
        date:{
            type:Date
        }
