@@ -6,7 +6,7 @@
  require("dotenv").config()
  require("./db/db")
 //Port
-const port = process.env.PORT || 4000
+const port = process.env.PORT || 4000;
 //importing routers here
     const userRoute = require("./router/user")
     const appointmentRoute = require("./router/appointment")

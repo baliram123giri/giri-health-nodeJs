@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "start": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +19,6 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.2.3",
     "nodemailer": "^6.7.2",
-    "nodemon": "^2.0.15",
     "react-infinite-scroll-component": "^6.1.0"
   }
 }
