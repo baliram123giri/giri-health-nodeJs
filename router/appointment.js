@@ -84,7 +84,6 @@ const {body, validationResult} = require("express-validator")
 
 //appointmet getting Single info with doctorname route
   router.get("/appointment/find/:doctorname", checkAuth.doctorAuth, async(req,res,next)=>{
-    console.log(req.params.doctorname)
     try {
       var {page, size} = req.query
       if(!page){
